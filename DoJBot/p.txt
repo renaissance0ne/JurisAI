@@ -1,0 +1,57 @@
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+from langchain_community.document_loaders import PyPDFLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from huggingface_hub import login
+from langchain_community.vectorstores import Chroma
+from langchain.chains import RetrievalQA
+from langchain.embeddings.huggingface import HuggingFaceEmbeddings
+from langchain_groq import ChatGroq  
+app = Flask(__name__)
+CORS(app)
+login(token="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")
+
+def initialize_rag_system():
+    # Load PDF documents
+    loader = PyPDFLoader("data/Dataset.pdf")
+    documents = loader.load()
+
+    # Split documents
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    splits = text_splitter.split_documents(documents)
+
+    # Create embeddings
+    embeddings = HuggingFaceEmbeddings()
+
+    # Set up vector store
+    vectorstore = Chroma.from_documents(documents=splits, embedding=embeddings, persist_directory="./chroma_db")
+
+    # Initialize ChatGroq
+    llm = ChatGroq(model_name="groq-llama-3b")
+
+    # Set up RAG pipeline
+    qa_chain = RetrievalQA.from_chain_type(
+        llm=llm,
+        chain_type="stuff",
+        retriever=vectorstore.as_retriever(search_kwargs={"k": 3}),
+        return_source_documents=True
+    )
+
+    return qa_chain
+
+qa_chain = initialize_rag_system()
+
+@app.route('/ask', methods=['POST'])
+def ask_question():
+    data = request.json
+    question = data['question']
+    
+    result = qa_chain({"query": question})
+    
+    return jsonify({
+        "answer": result["result"],
+        "sources": [doc.metadata['source'] for doc in result["source_documents"]]
+    })
+
+if __name__ == '__main__':
+    app.run(debug=True)

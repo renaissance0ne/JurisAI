@@ -1,0 +1,16 @@
+streamlit==1.38.0
+scikit-learn==1.5.2
+langchain-groq==0.1.9
+langchain-core==0.2.38
+langchain==0.2.16
+langchain-community==0.2.16
+faiss-cpu==1.8.0
+huggingface-hub==0.24.5
+transformers==4.44.0
+sentence-transformers==3.0.1
+python-dotenv==1.0.1
+pypdf==4.3.0
+flask==3.0.3
+flask-cors==5.0.0
+watchdog==5.0.2
+werkzeug==3.0.4
