@@ -15,7 +15,7 @@ const Hero = () => {
   useEffect(() => {
     let scene, camera, renderer, topWave, middleWave, bottomWave, animationFrameId;
     const particleCount = 1250; // Maintained particle count
-    const interactionRadius = 1.75; // Maintained interaction radius
+    const interactionRadius = 2; // Maintained interaction radius
     const mouse = new THREE.Vector2();
     const raycaster = new THREE.Raycaster();
 

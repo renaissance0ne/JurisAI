@@ -30,6 +30,15 @@ const teamMembers = [
         github: "https://github.com/PudhariSwaroopa"
     },
     {
+        name: "Pranitha",
+        role: "Contributor",
+        imgSrc: "public/assets/images/prani.png",
+        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. ",
+        linkedin: "http://linkedin.com/in/challa-pranitha-sri-bb379031a",
+        instagram: "https://www.instagram.com/pranithaa_4?igsh=YWp3amM1aDMyaWVt",
+        github: "https://github.com/prani23r01a66l1"
+    },
+    {
         name: "Adithya",
         role: "Technical Writer & Presentation Designer",
         imgSrc: "public/assets/images/adi.png",
@@ -37,6 +46,15 @@ const teamMembers = [
         linkedin: "#",
         instagram: "#",
         github: "#"
+    },
+    {
+        name: "Shritha",
+        role: "Contributor",
+        imgSrc: "public/assets/images/shri.png",
+        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. ",
+        linkedin: "https://www.linkedin.com/in/shritha-tirunagari-aa47b8291?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app ",
+        instagram: "https://www.instagram.com/",
+        github: "https://github.com/"
     },
 ];
 
