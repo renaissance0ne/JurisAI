@@ -12,6 +12,6 @@ python-dotenv==1.0.1
 pypdf==4.3.0
 flask==3.0.3
 flask-cors==5.0.0
-watchdog==5.0.2
+watchdog==4.0.2
 werkzeug==3.0.4
 gunicorn==23.0.0
