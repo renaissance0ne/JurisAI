@@ -1,3 +1,4 @@
+from flask_session import Session
 from flask import Flask, request, jsonify, render_template, session
 from flask_cors import CORS
 import os
@@ -26,6 +27,8 @@ warnings.filterwarnings("ignore", category=FutureWarning, module="transformers")
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)  # Set a secret key for session management
+app.config['SESSION_TYPE'] = 'filesystem'
+Session(app)
 CORS(app)  # This enables CORS for all routes
 
 load_dotenv()
@@ -177,4 +180,4 @@ def query():
     })
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
