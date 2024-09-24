@@ -1,10 +1,14 @@
-from flask_session import Session
-from flask import Flask, request, jsonify, render_template, session
+from flask import Flask, request, jsonify, session
 from flask_cors import CORS
+from flask_session import Session
 import os
 import time
 import warnings
 import logging
+import uuid
+import glob
+import re
+from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.chains.combine_documents import create_stuff_documents_chain
@@ -13,10 +17,6 @@ from langchain.chains import create_retrieval_chain
 from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import UnstructuredPDFLoader
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from dotenv import load_dotenv
-import glob
-import re
-import uuid
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -29,7 +29,7 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24)  # Set a secret key for session management
 app.config['SESSION_TYPE'] = 'filesystem'
 Session(app)
-CORS(app)  # This enables CORS for all routes
+CORS(app, resources={r"/*": {"origins": ["https://yourusername.github.io", "http://localhost:3000"]}}, supports_credentials=True)
 
 load_dotenv()
 
@@ -131,53 +131,53 @@ def format_response(text):
 # Initialize the vector embedding when the module is imported
 vector_embedding()
 
-@app.route('/')
-def home():
-    return render_template('index.html')
-
 @app.route('/query', methods=['POST'])
 def query():
-    data = request.json
-    prompt1 = data['prompt']
-    language = data.get('language', 'english')  # Default to English if not specified
-    
-    if vectors is None:
-        return jsonify({"error": "Vector Store DB is not ready. Please try again in a moment."})
+    try:
+        data = request.json
+        prompt1 = data['prompt']
+        language = data.get('language', 'english')  # Default to English if not specified
+        
+        if vectors is None:
+            return jsonify({"error": "Vector Store DB is not ready. Please try again in a moment."}), 503
 
-    # Check if a session exists, if not create a new one
-    if 'session_id' not in session:
-        session['session_id'] = str(uuid.uuid4())
-        session['conversation_history'] = []
+        # Check if a session exists, if not create a new one
+        if 'session_id' not in session:
+            session['session_id'] = str(uuid.uuid4())
+            session['conversation_history'] = []
 
-    # Retrieve the conversation history
-    conversation_history = session.get('conversation_history', [])
-    conversation_history_str = "\n".join([f"Human: {q}\nAI: {a}" for q, a in conversation_history])
+        # Retrieve the conversation history
+        conversation_history = session.get('conversation_history', [])
+        conversation_history_str = "\n".join([f"Human: {q}\nAI: {a}" for q, a in conversation_history])
 
-    document_chain = create_stuff_documents_chain(llm, prompt)
-    retriever = vectors.as_retriever()
-    retrieval_chain = create_retrieval_chain(retriever, document_chain)
-    
-    start = time.process_time()
-    response = retrieval_chain.invoke({
-        'input': prompt1,
-        'conversation_history': conversation_history_str,
-        'language': 'Hindi' if language == 'hindi' else 'English'
-    })
-    process_time = time.process_time() - start
+        document_chain = create_stuff_documents_chain(llm, prompt)
+        retriever = vectors.as_retriever()
+        retrieval_chain = create_retrieval_chain(retriever, document_chain)
+        
+        start = time.process_time()
+        response = retrieval_chain.invoke({
+            'input': prompt1,
+            'conversation_history': conversation_history_str,
+            'language': 'Hindi' if language == 'hindi' else 'English'
+        })
+        process_time = time.process_time() - start
 
-    logging.debug(f"Raw response from LLM:\n{response['answer']}")
-    formatted_answer = format_response(response['answer'])
-    
-    # Update the conversation history
-    conversation_history.append((prompt1, formatted_answer))
-    session['conversation_history'] = conversation_history[-5:]  # Keep only the last 5 exchanges
+        logging.debug(f"Raw response from LLM:\n{response['answer']}")
+        formatted_answer = format_response(response['answer'])
+        
+        # Update the conversation history
+        conversation_history.append((prompt1, formatted_answer))
+        session['conversation_history'] = conversation_history[-5:]  # Keep only the last 5 exchanges
 
-    return jsonify({
-        "answer": formatted_answer,
-        "context": [doc.page_content for doc in response["context"]],
-        "process_time": process_time,
-        "session_id": session['session_id']
-    })
+        return jsonify({
+            "answer": formatted_answer,
+            "context": [doc.page_content for doc in response["context"]],
+            "process_time": process_time,
+            "session_id": session['session_id']
+        })
+    except Exception as e:
+        logging.error(f"An error occurred: {str(e)}")
+        return jsonify({"error": "An internal error occurred"}), 500
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
