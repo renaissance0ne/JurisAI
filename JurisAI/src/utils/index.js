@@ -22,6 +22,20 @@ import Chatbot from "/assets/videos/Chatbot.mp4";
 import JurasAI from "/assets/videos/JurasAI.mp4";
 import Outro from "/assets/videos/Outro.mp4";
 
+import adi from "/assets/images/adi.png";
+import dhruv from "/assets/images/dhruv.png";
+import prani from "/assets/images/prani.png";
+import shri from "/assets/images/shri.png";
+import swap from "/assets/images/swap.png";
+import vallabh from "/assets/images/vallabh.png";
+
+export const Adithya = adi;
+export const Dhruv = dhruv;
+export const Pranitha = prani;
+export const Shritha = shri;
+export const Swaroopa = swap;
+export const Vallabh = vallabh;
+
 export const archi = Architecture;
 export const cbot = Chatbot;
 export const jai = JurasAI;

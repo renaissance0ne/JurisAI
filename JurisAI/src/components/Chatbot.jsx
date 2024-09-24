@@ -27,16 +27,22 @@ const Chatbot = () => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionId, setSessionId] = useState(null);
+  const [language, setLanguage] = useState(null);
   const chatRef = useRef(null);
 
   useEffect(() => {
-    setMessages([
-      {
-        text: "Hello! I'm Juris AI, your legal assistant. How can I help you today?",
-        sender: 'bot'
-      }
-    ]);
-  }, []);
+    if (language) {
+      setMessages([
+        {
+          text: language === 'english'
+            ? "Hello! I'm Juris AI, your legal assistant. How can I help you today?"
+            : "नमस्ते! मैं जूरिस एआई हूं, आपका कानूनी सहायक। मैं आज आपकी कैसे मदद कर सकता हूं?",
+          sender: 'bot'
+        }
+      ]);
+    }
+  }, [language]);
 
   useEffect(() => {
     gsap.from('.chat-message', {
@@ -49,6 +55,10 @@ const Chatbot = () => {
 
   const handleInputChange = (e) => {
     setInput(e.target.value);
+  };
+
+  const handleLanguageSelection = (selectedLanguage) => {
+    setLanguage(selectedLanguage);
   };
 
   const handleSubmit = async (e) => {
@@ -64,7 +74,12 @@ const Chatbot = () => {
       setMessages((prev) => [...prev, { text: response.answer, sender: 'bot' }]);
     } catch (error) {
       console.error('Error fetching response:', error);
-      setMessages((prev) => [...prev, { text: 'I apologize, but I encountered an error while processing your request. Could you please try again?', sender: 'bot' }]);
+      setMessages((prev) => [...prev, {
+        text: language === 'english'
+          ? 'I apologize, but I encountered an error while processing your request. Could you please try again?'
+          : 'क्षमा करें, लेकिन आपके अनुरोध को संसाधित करते समय मुझे एक त्रुटि का सामना करना पड़ा। कृपया पुनः प्रयास करें।',
+        sender: 'bot'
+      }]);
     } finally {
       setIsLoading(false);
     }
@@ -127,7 +142,7 @@ const Chatbot = () => {
         const headingText = trimmedLine.replace(/===/g, '').trim();
         // Remove # symbol if present
         const cleanHeadingText = headingText.startsWith('#') ? headingText.substring(1).trim() : headingText;
-        // Remove *Note:** if present
+        return <h2 key={index} className="text-2xl font-semibold mb-2">{formatLine(cleanHeadingText)}</h2>;
       }
 
       // Unordered list item
@@ -152,6 +167,32 @@ const Chatbot = () => {
     });
   };
 
+  if (!language) {
+    return (
+      <div className="flex flex-col h-[500px] w-full max-w-md mx-auto bg-gray-900 text-white rounded-lg overflow-hidden">
+        <h1 className="text-xl font-bold p-3 bg-gray-800 text-yellow-400">Juris AI</h1>
+        <div className="flex-grow flex flex-col items-center justify-center p-3 bg-gray-800">
+          <h2 className="text-lg font-semibold mb-2">Select Your Preferred Language</h2>
+          <h3 className="text-md mb-4">अपनी पसंदीदा भाषा चुनें</h3>
+          <div className="space-y-3 w-full max-w-xs">
+            <button
+              onClick={() => handleLanguageSelection('english')}
+              className="w-full bg-yellow-500 text-gray-900 px-4 py-2 rounded text-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+            >
+              English
+            </button>
+            <button
+              onClick={() => handleLanguageSelection('hindi')}
+              className="w-full bg-yellow-500 text-gray-900 px-4 py-2 rounded text-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+            >
+              हिंदी
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-[500px] w-full max-w-md mx-auto bg-gray-900 text-white rounded-lg overflow-hidden">
       <h1 className="text-xl font-bold p-3 bg-gray-800 text-yellow-400">Juris AI</h1>
@@ -169,7 +210,7 @@ const Chatbot = () => {
         {isLoading && (
           <div className="chat-message flex justify-start mb-2">
             <div className="p-2 bg-gray-700 text-white rounded-lg max-w-[80%]">
-              Analyzing...
+              {language === 'english' ? 'Analyzing...' : 'विश्लेषण कर रहा हूं...'}
             </div>
           </div>
         )}
@@ -180,13 +221,13 @@ const Chatbot = () => {
           value={input}
           onChange={handleInputChange}
           className="flex-grow p-2 text-sm rounded-l-md bg-gray-700 text-white focus:outline-none focus:ring-1 focus:ring-yellow-400"
-          placeholder="Ask a legal question..."
+          placeholder={language === 'english' ? "Ask a legal question..." : "एक कानूनी प्रश्न पूछें..."}
         />
         <button
           type="submit"
           className="bg-yellow-500 text-gray-900 p-2 rounded-r-md text-sm hover:bg-yellow-600 focus:outline-none focus:ring-1 focus:ring-yellow-400"
         >
-          Send
+          {language === 'english' ? 'Send' : 'भेजें'}
         </button>
       </form>
     </div>

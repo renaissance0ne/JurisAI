@@ -1,6 +1,4 @@
-# Server-side code (Python/Flask)
-
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, session
 from flask_cors import CORS
 import os
 import time
@@ -17,6 +15,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from dotenv import load_dotenv
 import glob
 import re
+import uuid
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -26,6 +25,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning, module="langchain
 warnings.filterwarnings("ignore", category=FutureWarning, module="transformers")
 
 app = Flask(__name__)
+app.secret_key = os.urandom(24)  # Set a secret key for session management
 CORS(app)  # This enables CORS for all routes
 
 load_dotenv()
@@ -37,14 +37,20 @@ llm = ChatGroq(groq_api_key=groq_api_key, model_name="Llama3-8b-8192")
 
 prompt = ChatPromptTemplate.from_template(
 """
-Answer the questions based on the provided context only.
+Answer the questions based on the provided context and previous conversation history.
 Please provide the most accurate response based on the question.
 Format your response with clear paragraphs and use numbered or bulleted lists for multiple points.
 If appropriate, use headers to separate different sections of your response.
 
+Important: Respond in {language}. If the language is Hindi, use Devanagari script.
+
 <context>
 {context}
 </context>
+
+<conversation_history>
+{conversation_history}
+</conversation_history>
 
 Question: {input}
 
@@ -55,7 +61,7 @@ Remember to structure your response for clarity:
 4. Use headers (preceded by '##') to separate major sections if the response is complex.
 5. Separate each point, paragraph, or section with a blank line.
 
-Begin your response:
+Begin your response in {language}:
 """
 )
 
@@ -130,27 +136,45 @@ def home():
 def query():
     data = request.json
     prompt1 = data['prompt']
+    language = data.get('language', 'english')  # Default to English if not specified
     
     if vectors is None:
         return jsonify({"error": "Vector Store DB is not ready. Please try again in a moment."})
+
+    # Check if a session exists, if not create a new one
+    if 'session_id' not in session:
+        session['session_id'] = str(uuid.uuid4())
+        session['conversation_history'] = []
+
+    # Retrieve the conversation history
+    conversation_history = session.get('conversation_history', [])
+    conversation_history_str = "\n".join([f"Human: {q}\nAI: {a}" for q, a in conversation_history])
 
     document_chain = create_stuff_documents_chain(llm, prompt)
     retriever = vectors.as_retriever()
     retrieval_chain = create_retrieval_chain(retriever, document_chain)
     
     start = time.process_time()
-    response = retrieval_chain.invoke({'input': prompt1})
+    response = retrieval_chain.invoke({
+        'input': prompt1,
+        'conversation_history': conversation_history_str,
+        'language': 'Hindi' if language == 'hindi' else 'English'
+    })
     process_time = time.process_time() - start
 
     logging.debug(f"Raw response from LLM:\n{response['answer']}")
     formatted_answer = format_response(response['answer'])
     
+    # Update the conversation history
+    conversation_history.append((prompt1, formatted_answer))
+    session['conversation_history'] = conversation_history[-5:]  # Keep only the last 5 exchanges
+
     return jsonify({
         "answer": formatted_answer,
         "context": [doc.page_content for doc in response["context"]],
-        "process_time": process_time
+        "process_time": process_time,
+        "session_id": session['session_id']
     })
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(debug=True)
