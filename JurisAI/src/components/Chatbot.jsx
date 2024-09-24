@@ -1,6 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
 import { gsap } from 'gsap';
+
+const API_URL = 'https://jurisai.onrender.com/';
+
+async function sendQuery(prompt, language = 'english') {
+  try {
+    const response = await fetch(`${API_URL}/query`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ prompt, language }),
+      credentials: 'include' // This is needed for session management
+    });
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
+  }
+}
 
 const Chatbot = () => {
   const [input, setInput] = useState('');
@@ -39,8 +60,8 @@ const Chatbot = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:5000/query', { prompt: input });
-      setMessages((prev) => [...prev, { text: response.data.answer, sender: 'bot' }]);
+      const response = await sendQuery(input);
+      setMessages((prev) => [...prev, { text: response.answer, sender: 'bot' }]);
     } catch (error) {
       console.error('Error fetching response:', error);
       setMessages((prev) => [...prev, { text: 'I apologize, but I encountered an error while processing your request. Could you please try again?', sender: 'bot' }]);
@@ -48,6 +69,7 @@ const Chatbot = () => {
       setIsLoading(false);
     }
   };
+
 
   const formatMessage = (text) => {
     const lines = text.split('\n');
