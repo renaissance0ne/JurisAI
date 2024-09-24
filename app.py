@@ -29,7 +29,7 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24)  # Set a secret key for session management
 app.config['SESSION_TYPE'] = 'filesystem'
 Session(app)
-CORS(app, resources={r"/*": {"origins": ["https://yourusername.github.io", "http://localhost:3000"]}}, supports_credentials=True)
+CORS(app, resources={r"/*": {"origins": ["https://renaissance0ne.github.io", "http://localhost:3000"]}}, supports_credentials=True)
 
 load_dotenv()
 
