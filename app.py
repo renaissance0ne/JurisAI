@@ -36,7 +36,7 @@ load_dotenv()
 # Load the GROQ API KEY
 groq_api_key = os.getenv('GROQ_API_KEY')
 
-llm = ChatGroq(groq_api_key=groq_api_key, model_name="Llama-3.2-11b-text-preview")
+llm = ChatGroq(groq_api_key=groq_api_key, model_name="Llama-3.3-70b-versatile")
 
 prompt = ChatPromptTemplate.from_template(
 """
